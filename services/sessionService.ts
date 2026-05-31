@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
 export const sessionService = {
-  async getById(id: string) {
+  getById(id: string) {
     return supabase
       .from("sessions")
       .select("*")
@@ -9,10 +9,14 @@ export const sessionService = {
       .single();
   },
 
-  async update(id: string, payload: any) {
+  getAll() {
+    return supabase.from("sessions").select("*");
+  },
+
+  update(id: string, data: any) {
     return supabase
       .from("sessions")
-      .update(payload)
+      .update(data)
       .eq("id", id);
   },
 };
