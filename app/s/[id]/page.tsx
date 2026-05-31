@@ -19,11 +19,15 @@ export default function SessionPage({
 }: {
   params: any;
 }) {
+  // 🔥 強制統一 ID 型別（解決 ParamValue / string[]）
   const rawId = params?.id;
 
-  const sessionId = Array.isArray(rawId)
-    ? rawId[0]
-    : rawId;
+  const sessionId =
+    typeof rawId === "string"
+      ? rawId
+      : Array.isArray(rawId)
+      ? rawId[0]
+      : String(rawId);
 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,15 +37,13 @@ export default function SessionPage({
   async function loadSession() {
     if (!sessionId) return;
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("sessions")
       .select("*")
       .eq("id", sessionId)
       .single();
 
-    if (!error) {
-      setSession(data);
-    }
+    setSession(data || null);
   }
 
   // 讀報名人數
@@ -68,10 +70,10 @@ export default function SessionPage({
 
   // 一鍵報名
   async function joinSession() {
-    const memberId = "demo-user"; // 之後換 LINE user
+    const memberId = "demo-user"; // 未來改 LINE userId
 
     if (!sessionId) {
-      alert("場次錯誤");
+      alert("場次不存在");
       return;
     }
 
