@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useParams } from "next/navigation";
-import { supabase } from "../../../../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 type Member = {
   id: string;

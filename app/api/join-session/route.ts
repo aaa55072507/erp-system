@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
 export async function POST(req: Request) {
   try {
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     );
   }
 }import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../../../lib/supabase";
 import { sendLineMessage } from "@/lib/line";
 
 export async function POST(req: Request) {
