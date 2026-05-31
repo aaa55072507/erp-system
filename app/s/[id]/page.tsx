@@ -1,118 +1,152 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+import { useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { getId } from "@/lib/id";
 
 type Session = {
   id: string;
   title: string;
+  booking_date: string;
   start_time: string;
   end_time: string;
   price: number;
-  max_players: number;
-  status: string;
 };
 
-export default function SessionPage({
-  params,
-}: {
-  params: any;
-}) {
-  // 🔥 統一修正 ParamValue / string[]
-  const rawId = params?.id;
+type SessionMember = {
+  id: string;
+  status: "registered" | "waitlist";
+  payment_status: "unpaid" | "paid";
+};
 
-  const sessionId =
-    typeof rawId === "string"
-      ? rawId
-      : Array.isArray(rawId)
-      ? rawId[0]
-      : String(rawId ?? "");
+export default function SuccessPage() {
+  const params = useParams();
+
+  const sessionId = getId(params?.id);
 
   const [session, setSession] = useState<Session | null>(null);
+  const [sm, setSm] = useState<SessionMember | null>(null);
   const [loading, setLoading] = useState(true);
-  const [count, setCount] = useState(0);
 
-  async function loadSession() {
+  async function loadData() {
     if (!sessionId) return;
 
-    const { data } = await supabase
+    const { data: sessionData } = await supabase
       .from("sessions")
       .select("*")
       .eq("id", sessionId)
       .single();
 
-    setSession(data || null);
-  }
-
-  async function loadCount() {
-    if (!sessionId) return;
-
-    const { count } = await supabase
+    const { data: smData } = await supabase
       .from("session_members")
-      .select("*", { count: "exact", head: true })
-      .eq("session_id", sessionId);
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
 
-    setCount(count || 0);
+    setSession(sessionData);
+    setSm(smData);
   }
 
   useEffect(() => {
-    async function init() {
+    (async () => {
       setLoading(true);
-      await Promise.all([loadSession(), loadCount()]);
+      await loadData();
       setLoading(false);
-    }
-
-    init();
+    })();
   }, [sessionId]);
 
-  async function joinSession() {
-    const memberId = "demo-user";
-
-    if (!sessionId) {
-      alert("場次不存在");
-      return;
-    }
-
-    const { error } = await supabase.from("session_members").insert({
-      session_id: String(sessionId), // 🔥 強制 string（關鍵）
-      member_id: memberId,
-      status: "confirmed",
-    });
-
-    if (error) {
-      alert("報名失敗：" + error.message);
-      return;
-    }
-
-    alert("報名成功");
-    loadCount();
+  if (loading) {
+    return <p style={{ padding: 20 }}>載入中...</p>;
   }
 
-  if (loading) return <div style={{ padding: 20 }}>載入中...</div>;
+  if (!session || !sm) {
+    return <p style={{ padding: 20 }}>找不到資料</p>;
+  }
 
-  if (!session) return <div style={{ padding: 20 }}>找不到場次</div>;
+  const isWaitlist = sm.status === "waitlist";
+  const isPaid = sm.payment_status === "paid";
 
   return (
-    <div style={{ padding: 20, fontFamily: "sans-serif" }}>
+    <div style={{ maxWidth: 600, margin: "0 auto", padding: 20 }}>
+      <h1>🎉 報名成功</h1>
+
       <h2>{session.title}</h2>
 
-      <div>🕒 {session.start_time} ~ {session.end_time}</div>
-      <div>💰 ${session.price}</div>
-      <div>👥 {count} / {session.max_players}</div>
+      <div style={{ lineHeight: 1.8, marginTop: 10 }}>
+        📅 {session.booking_date}
+        <br />
+        🕒 {session.start_time} ~ {session.end_time}
+        <br />
+        💰 {session.price} 元
+        <br />
+      </div>
 
-      <button
-        onClick={joinSession}
+      <div
         style={{
           marginTop: 20,
           padding: 12,
-          width: "100%",
-          background: "#000",
-          color: "#fff",
           borderRadius: 8,
+          background: isWaitlist ? "#fff3cd" : "#d4edda",
+        }}
+      >
+        {isWaitlist ? "⏳ 目前為候補名單" : "✅ 已成功報名"}
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <h3>💰 付款資訊</h3>
+
+        {isPaid ? (
+          <div style={{ color: "green" }}>✔ 已付款完成</div>
+        ) : (
+          <>
+            <div>請完成付款後保留名額：</div>
+
+            <div style={{ marginTop: 10 }}>
+              🏦 轉帳帳號：123-456-789（示意）
+              <br />
+              💳 金額：{session.price} 元
+            </div>
+
+            <div
+              style={{
+                marginTop: 10,
+                padding: 10,
+                background: "#f5f5f5",
+                borderRadius: 8,
+              }}
+            >
+              ⚠️ 請備註姓名 + 場次
+            </div>
+          </>
+        )}
+      </div>
+
+      <div
+        style={{
+          marginTop: 30,
+          padding: 12,
+          border: "1px solid #ddd",
+          borderRadius: 8,
+        }}
+      >
+        📢 請加入 LINE 群組以確認名單與臨時通知
+      </div>
+
+      <button
+        style={{
+          marginTop: 20,
+          width: "100%",
+          padding: 12,
+          borderRadius: 8,
+          background: "#06c755",
+          color: "white",
           border: "none",
         }}
       >
-        一鍵報名
+        加入 LINE 群組
       </button>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 type Session = {
   id: string;
@@ -35,21 +35,27 @@ export default function SessionsPage() {
       return;
     }
 
-    setSessions(data || []);
+    const list = data || [];
+    setSessions(list);
 
-    // 人數統計
-    const newCounts: Record<string, number> = {};
+    // 🔥 改成並行查詢（修 performance）
+    const results = await Promise.all(
+      list.map(async (s) => {
+        const { count } = await supabase
+          .from("session_members")
+          .select("*", { count: "exact", head: true })
+          .eq("session_id", s.id);
 
-    for (const s of data || []) {
-      const { count } = await supabase
-        .from("session_members")
-        .select("*", { count: "exact", head: true })
-        .eq("session_id", s.id);
+        return { id: s.id, count: count || 0 };
+      })
+    );
 
-      newCounts[s.id] = count || 0;
-    }
+    const map: Record<string, number> = {};
+    results.forEach((r) => {
+      map[r.id] = r.count;
+    });
 
-    setCounts(newCounts);
+    setCounts(map);
     setLoading(false);
   }
 
@@ -68,38 +74,14 @@ export default function SessionsPage() {
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}>
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-        }}
-      >
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h1>🏐 場次管理</h1>
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button
-            onClick={loadSessions}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 8,
-              cursor: "pointer",
-            }}
-          >
-            🔄 重新整理
-          </button>
+          <button onClick={loadSessions}>🔄 重新整理</button>
 
           <Link href="/sessions/new">
-            <button
-              style={{
-                padding: "8px 12px",
-                borderRadius: 8,
-                cursor: "pointer",
-              }}
-            >
-              ➕ 新增場次
-            </button>
+            <button>➕ 新增場次</button>
           </Link>
         </div>
       </div>
@@ -107,93 +89,34 @@ export default function SessionsPage() {
       {loading && <p>載入中...</p>}
 
       {!loading && sessions.length === 0 && (
-        <div
-          style={{
-            padding: 20,
-            border: "1px solid #ddd",
-            borderRadius: 12,
-          }}
-        >
-          尚未建立場次
-        </div>
+        <div style={{ padding: 20 }}>尚未建立場次</div>
       )}
 
-      {/* Sessions list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {sessions.map((s) => {
           const count = counts[s.id] || 0;
 
           return (
-            <div
-              key={s.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: 12,
-                padding: 16,
-                background: "#fff",
-              }}
-            >
-              {/* Title */}
-              <div style={{ fontSize: 20, fontWeight: 700 }}>
-                🏐 {s.title}
-              </div>
+            <div key={s.id} style={{ border: "1px solid #ddd", padding: 16 }}>
+              <div style={{ fontSize: 18 }}>🏐 {s.title}</div>
 
-              {/* Date & time */}
-              <div style={{ marginTop: 6 }}>
-                📅 {s.booking_date}
-              </div>
+              <div>📅 {s.booking_date}</div>
+              <div>🕒 {s.start_time} ~ {s.end_time}</div>
+
+              <div>👥 {count} / {s.max_players}</div>
+              <div>💰 NT$ {s.price}</div>
 
               <div>
-                🕒 {s.start_time} ~ {s.end_time}
-              </div>
-
-              {/* People */}
-              <div style={{ marginTop: 6 }}>
-                👥 {count} / {s.max_players}
-              </div>
-
-              {/* Price */}
-              <div style={{ marginTop: 6 }}>
-                💰 NT$ {s.price}
-              </div>
-
-              {/* Status */}
-              <div style={{ marginTop: 6 }}>
                 📌 {getStatus(s.status, count, s.max_players)}
               </div>
 
-              {/* Actions */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  marginTop: 12,
-                }}
-              >
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <Link href={`/sessions/${s.id}`}>
-                  <button
-                    style={{
-                      flex: 1,
-                      padding: 10,
-                      borderRadius: 8,
-                      cursor: "pointer",
-                    }}
-                  >
-                    ✏ 編輯
-                  </button>
+                  <button>✏ 編輯</button>
                 </Link>
 
                 <Link href={`/sessions/${s.id}/members`}>
-                  <button
-                    style={{
-                      flex: 1,
-                      padding: 10,
-                      borderRadius: 8,
-                      cursor: "pointer",
-                    }}
-                  >
-                    👥 名單
-                  </button>
+                  <button>👥 名單</button>
                 </Link>
               </div>
             </div>
