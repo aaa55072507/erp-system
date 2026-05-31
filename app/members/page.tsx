@@ -90,7 +90,8 @@ export default function Members() {
     const { error } = await supabase
       .from("members")
       .delete()
-      .eq("id", id);
+      .if (!id) return;
+       eq("id", id)
 
     if (error) {
       alert("刪除失敗：" + error.message);

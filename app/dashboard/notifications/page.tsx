@@ -37,7 +37,8 @@ export default function NotificationsPage() {
     const { error } = await supabase
       .from("notifications")
       .update({ read: true })
-      .eq("id", id);
+      .if (!id) return;
+       eq("id", id)
 
     if (error) {
       alert("更新失敗：" + error.message);

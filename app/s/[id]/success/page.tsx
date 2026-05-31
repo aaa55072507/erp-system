@@ -29,8 +29,9 @@ export default function SuccessPage() {
     const { data: sessionData } = await supabase
       .from("sessions")
       .select("*")
-      .eq("id", id)
-      .single();
+      .if (!id) return;
+       eq("id", id)
+      .maybeSingle()
 
     const { data: smData } = await supabase
       .from("session_members")
@@ -38,7 +39,7 @@ export default function SuccessPage() {
       .eq("session_id", id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle()
 
     setSession(sessionData);
     setSm(smData);

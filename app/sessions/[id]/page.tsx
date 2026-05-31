@@ -9,9 +9,9 @@ export default function EditSessionPage() {
   const router = useRouter();
 
   // ✅ 安全處理 id（避免 string[] / undefined）
-  const id = Array.isArray(params?.id)
+  const id = Array.isArray(params.id)
     ? params.id[0]
-    : params?.id ?? null;
+    : params.id;
 
   const [loading, setLoading] = useState(true);
 
@@ -37,8 +37,9 @@ export default function EditSessionPage() {
     const { data, error } = await supabase
       .from("sessions")
       .select("*")
-      .eq("id", id)
-      .single();
+      .if (!id) return;
+      eq("id", id)
+      .maybeSingle()
 
     if (error) {
       console.error(error);
@@ -85,7 +86,8 @@ export default function EditSessionPage() {
         status,
         notes,
       })
-      .eq("id", id);
+      .if (!id) return;
+        eq("id", id)
 
     if (error) {
       alert("更新失敗：" + error.message);

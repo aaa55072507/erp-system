@@ -5,8 +5,9 @@ export const sessionService = {
     return supabase
       .from("sessions")
       .select("*")
-      .eq("id", id)
-      .single();
+      .if (!id) return;
+      eq("id", id)
+      .maybeSingle();
   },
 
   getAll() {
@@ -17,6 +18,7 @@ export const sessionService = {
     return supabase
       .from("sessions")
       .update(data)
-      .eq("id", id);
+      .if (!id) return;
+        eq("id", id)
   },
 };

@@ -23,7 +23,7 @@ type SessionMember = {
 export default function SuccessPage() {
   const params = useParams();
 
-  const sessionId = getId(params?.id);
+  const sessionId = getId(params?.id?.toString);
 
   const [session, setSession] = useState<Session | null>(null);
   const [sm, setSm] = useState<SessionMember | null>(null);
@@ -36,7 +36,7 @@ export default function SuccessPage() {
       .from("sessions")
       .select("*")
       .eq("id", sessionId)
-      .single();
+      .maybeSingle()
 
     const { data: smData } = await supabase
       .from("session_members")
@@ -44,7 +44,7 @@ export default function SuccessPage() {
       .eq("session_id", sessionId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle()
 
     setSession(sessionData);
     setSm(smData);

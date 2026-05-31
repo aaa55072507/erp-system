@@ -36,7 +36,8 @@ export default function SessionMembersPage() {
   async function loadData() {
     const [{ data: sessionData }, { data: membersData }, { data: smData }] =
       await Promise.all([
-        supabase.from("sessions").select("*").eq("id", id).single(),
+        supabase.from("sessions").select("*").if (!id) return;
+        eq("id", id).maybeSingle(),
         supabase.from("members").select("*"),
         supabase.from("session_members").select("*").eq("session_id", id),
       ]);
@@ -105,8 +106,8 @@ export default function SessionMembersPage() {
     await supabase
       .from("session_members")
       .delete()
-      .eq("session_id", id)
-      .eq("member_id", memberId);
+      .eq("session_id", session id)
+      .eq("member_id", member id);
 
     loadData();
   }
