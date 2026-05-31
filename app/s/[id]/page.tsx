@@ -14,17 +14,16 @@ type Session = {
   session_type?: string;
 };
 
-type Member = {
-  id: string;
-};
-
 export default function SessionPage({
   params,
 }: {
-  params: { id: string | string[] };
+  params: any;
 }) {
   const rawId = params?.id;
-  const sessionId = Array.isArray(rawId) ? rawId[0] : rawId;
+
+  const sessionId = Array.isArray(rawId)
+    ? rawId[0]
+    : rawId;
 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,13 +33,15 @@ export default function SessionPage({
   async function loadSession() {
     if (!sessionId) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("sessions")
       .select("*")
       .eq("id", sessionId)
       .single();
 
-    setSession(data || null);
+    if (!error) {
+      setSession(data);
+    }
   }
 
   // 讀報名人數
@@ -67,13 +68,20 @@ export default function SessionPage({
 
   // 一鍵報名
   async function joinSession() {
-    const memberId = "demo-user"; // 之後改成登入會員
+    const memberId = "demo-user"; // 之後換 LINE user
 
-    const { error } = await supabase.from("session_members").insert({
-      session_id: sessionId,
-      member_id: memberId,
-      status: "confirmed",
-    });
+    if (!sessionId) {
+      alert("場次錯誤");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("session_members")
+      .insert({
+        session_id: sessionId,
+        member_id: memberId,
+        status: "confirmed",
+      });
 
     if (error) {
       alert("報名失敗：" + error.message);
@@ -84,27 +92,36 @@ export default function SessionPage({
     loadCount();
   }
 
-  if (loading) return <div style={{ padding: 20 }}>載入中...</div>;
+  if (loading)
+    return <div style={{ padding: 20 }}>載入中...</div>;
 
-  if (!session) return <div style={{ padding: 20 }}>找不到場次</div>;
+  if (!session)
+    return <div style={{ padding: 20 }}>找不到場次</div>;
 
   return (
     <div style={{ padding: 20, fontFamily: "sans-serif" }}>
       <h2>{session.title}</h2>
 
-      <div>🕒 {session.start_time} ~ {session.end_time}</div>
+      <div>
+        🕒 {session.start_time} ~ {session.end_time}
+      </div>
+
       <div>💰 ${session.price}</div>
-      <div>👥 {count} / {session.max_players}</div>
+
+      <div>
+        👥 {count} / {session.max_players}
+      </div>
 
       <button
         onClick={joinSession}
         style={{
           marginTop: 20,
-          padding: 10,
+          padding: 12,
           width: "100%",
           background: "#000",
           color: "#fff",
           borderRadius: 8,
+          border: "none",
         }}
       >
         一鍵報名
