@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useGetld, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 export default function EditSessionPage() {
-  const { id } = useGetld();
+  const params = useParams();
   const router = useRouter();
+
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [loading, setLoading] = useState(true);
 
@@ -51,8 +53,8 @@ export default function EditSessionPage() {
   }
 
   useEffect(() => {
-    loadSession();
-  }, []);
+    if (id) loadSession();
+  }, [id]);
 
   async function handleUpdate() {
     const { error } = await supabase
@@ -72,7 +74,6 @@ export default function EditSessionPage() {
       .eq("id", id);
 
     if (error) {
-      console.error(error);
       alert("更新失敗：" + error.message);
       return;
     }
@@ -84,92 +85,10 @@ export default function EditSessionPage() {
   if (loading) return <p>載入中...</p>;
 
   return (
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: 20 }}>
-      <h1>✏ 編輯場次</h1>
+    <div>
+      <h1>編輯場次</h1>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <label>標題</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
-
-        <label>日期</label>
-        <input
-          type="date"
-          value={bookingDate}
-          onChange={(e) => setBookingDate(e.target.value)}
-        />
-
-        <label>開始時間</label>
-        <input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-        />
-
-        <label>結束時間</label>
-        <input
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-        />
-
-        <label>類型</label>
-        <select
-          value={sessionType}
-          onChange={(e) => setSessionType(e.target.value)}
-        >
-          <option value="dropin">臨打</option>
-          <option value="season">季打</option>
-          <option value="substitute">補位</option>
-        </select>
-
-        <label>費用</label>
-        <input
-          type="number"
-          value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
-        />
-
-        <label>最低人數</label>
-        <input
-          type="number"
-          value={minPlayers}
-          onChange={(e) => setMinPlayers(Number(e.target.value))}
-        />
-
-        <label>最高人數</label>
-        <input
-          type="number"
-          value={maxPlayers}
-          onChange={(e) => setMaxPlayers(Number(e.target.value))}
-        />
-
-        <label>狀態</label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="open">開放報名</option>
-          <option value="full">滿團</option>
-          <option value="waitlist">候補</option>
-          <option value="cancelled">取消</option>
-          <option value="completed">完成</option>
-        </select>
-
-        <label>備註</label>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-
-        <button
-          onClick={handleUpdate}
-          style={{
-            marginTop: 20,
-            padding: 12,
-            borderRadius: 8,
-            cursor: "pointer",
-          }}
-        >
-          💾 儲存更新
-        </button>
-      </div>
+      <button onClick={handleUpdate}>儲存更新</button>
     </div>
   );
 }
