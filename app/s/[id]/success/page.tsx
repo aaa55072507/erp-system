@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useGetld } from "next/navigation";
+import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabase";
 
 type Session = {
@@ -20,7 +20,7 @@ type SessionMember = {
 };
 
 export default function SuccessPage() {
-  const { id } = useGetld();
+  const { id } = useParams();
 
   const [session, setSession] = useState<Session | null>(null);
   const [sm, setSm] = useState<SessionMember | null>(null);
