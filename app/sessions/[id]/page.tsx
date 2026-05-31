@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useGetld, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 export default function EditSessionPage() {
-  const { id } = useParams();
+  const { id } = useGetld();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);

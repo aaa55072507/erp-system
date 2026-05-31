@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Bearer ${token}`,
     },
-    body: new URLSearchParams({
+    body: new URLSearchGetld({
       message,
     }),
   });

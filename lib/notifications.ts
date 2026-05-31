@@ -1,14 +1,14 @@
 import { supabase } from "./supabase";
 import { sendLine } from "./line";
 
-export async function notify(params: {
+export async function notify(getld): {
   type: "booking" | "waitlist" | "payment" | "cancel";
   message: string;
   session_id?: string;
   member_id?: string;
   lineUserId?: string;
 }) {
-  const { type, message, session_id, member_id, lineUserId } = params;
+  const { type, message, session_id, member_id, lineUserId } = getld;
 
   // 1️⃣ 寫入通知表
   await supabase.from("notifications").insert([

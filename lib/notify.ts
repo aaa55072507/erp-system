@@ -2,13 +2,13 @@ import { supabase } from "./supabase";
 
 type NotifyType = "booking" | "waitlist" | "payment";
 
-export async function createNotification(params: {
+export async function createNotification(getld: {
   type: NotifyType;
   message: string;
   session_id?: string;
   member_id?: string;
 }) {
-  const { type, message, session_id, member_id } = params;
+  const { type, message, session_id, member_id } = getld;
 
   await supabase.from("notifications").insert([
     {
