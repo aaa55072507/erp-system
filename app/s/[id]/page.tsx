@@ -11,7 +11,6 @@ type Session = {
   price: number;
   max_players: number;
   status: string;
-  session_type?: string;
 };
 
 export default function SessionPage({
@@ -19,20 +18,20 @@ export default function SessionPage({
 }: {
   params: any;
 }) {
-  // 🔥 統一處理 Next.js ParamValue
+  // 🔥 統一修正 ParamValue / string[]
   const rawId = params?.id;
 
-  const sessionId = Array.isArray(rawId)
-    ? rawId[0]
-    : typeof rawId === "string"
-    ? rawId
-    : String(rawId);
+  const sessionId =
+    typeof rawId === "string"
+      ? rawId
+      : Array.isArray(rawId)
+      ? rawId[0]
+      : String(rawId ?? "");
 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [count, setCount] = useState(0);
 
-  // 讀單一場次
   async function loadSession() {
     if (!sessionId) return;
 
@@ -45,7 +44,6 @@ export default function SessionPage({
     setSession(data || null);
   }
 
-  // 讀報名人數
   async function loadCount() {
     if (!sessionId) return;
 
@@ -67,9 +65,8 @@ export default function SessionPage({
     init();
   }, [sessionId]);
 
-  // 一鍵報名
   async function joinSession() {
-    const memberId = "demo-user"; // 未來改 LINE userId
+    const memberId = "demo-user";
 
     if (!sessionId) {
       alert("場次不存在");
@@ -77,7 +74,7 @@ export default function SessionPage({
     }
 
     const { error } = await supabase.from("session_members").insert({
-      session_id: sessionId,
+      session_id: String(sessionId), // 🔥 強制 string（關鍵）
       member_id: memberId,
       status: "confirmed",
     });
@@ -91,25 +88,17 @@ export default function SessionPage({
     loadCount();
   }
 
-  if (loading)
-    return <div style={{ padding: 20 }}>載入中...</div>;
+  if (loading) return <div style={{ padding: 20 }}>載入中...</div>;
 
-  if (!session)
-    return <div style={{ padding: 20 }}>找不到場次</div>;
+  if (!session) return <div style={{ padding: 20 }}>找不到場次</div>;
 
   return (
     <div style={{ padding: 20, fontFamily: "sans-serif" }}>
       <h2>{session.title}</h2>
 
-      <div>
-        🕒 {session.start_time} ~ {session.end_time}
-      </div>
-
+      <div>🕒 {session.start_time} ~ {session.end_time}</div>
       <div>💰 ${session.price}</div>
-
-      <div>
-        👥 {count} / {session.max_players}
-      </div>
+      <div>👥 {count} / {session.max_players}</div>
 
       <button
         onClick={joinSession}
