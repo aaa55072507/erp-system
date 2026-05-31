@@ -19,15 +19,14 @@ export default function SessionPage({
 }: {
   params: any;
 }) {
-  // 🔥 強制統一 ID 型別（解決 ParamValue / string[]）
+  // 🔥 統一處理 Next.js ParamValue
   const rawId = params?.id;
 
-  const sessionId =
-    typeof rawId === "string"
-      ? rawId
-      : Array.isArray(rawId)
-      ? rawId[0]
-      : String(rawId);
+  const sessionId = Array.isArray(rawId)
+    ? rawId[0]
+    : typeof rawId === "string"
+    ? rawId
+    : String(rawId);
 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,13 +76,11 @@ export default function SessionPage({
       return;
     }
 
-    const { error } = await supabase
-      .from("session_members")
-      .insert({
-        session_id: sessionId,
-        member_id: memberId,
-        status: "confirmed",
-      });
+    const { error } = await supabase.from("session_members").insert({
+      session_id: sessionId,
+      member_id: memberId,
+      status: "confirmed",
+    });
 
     if (error) {
       alert("報名失敗：" + error.message);
